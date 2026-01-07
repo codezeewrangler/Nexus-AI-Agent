@@ -2,12 +2,6 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for FAISS and document parsing
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
-
 # Create virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -21,7 +15,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Create data directories
-RUN mkdir -p data/documents data/vectorstore
+RUN mkdir -p data/documents
 
 # Expose port
 EXPOSE 8000
