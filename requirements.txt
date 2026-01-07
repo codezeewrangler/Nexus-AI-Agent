@@ -1,9 +1,11 @@
 fastapi
-uvicorn
+uvicorn[standard]
 redis
 openai
 langchain
 langgraph
+sentence-transformers
+faiss-cpu
 pypdf
 python-dotenv
 python-docx
