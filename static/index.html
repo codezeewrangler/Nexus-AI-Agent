@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI Agent | Intelligent Task Summarization</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <h1>Nexus AI Agent</h1>
+            </div>
+            <p class="tagline">Intelligent Task Summarization</p>
+        </header>
+
+        <!-- Main Card -->
+        <main class="card">
+            <!-- File Upload -->
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">☁️</div>
+                <p class="upload-text">
+                    <span>Click to upload</span> or drag & drop<br>
+                    PDF, TXT, DOCX supported
+                </p>
+                <input type="file" id="fileInput" accept=".pdf,.txt,.docx" hidden>
+            </div>
+            
+            <div class="file-info" id="fileInfo">
+                <span class="file-icon">📄</span>
+                <span class="file-name" id="fileName"></span>
+                <button class="remove-btn" id="removeFile">✕</button>
+            </div>
+
+            <!-- Query Input -->
+            <div class="query-section">
+                <label class="query-label">Your Query</label>
+                <textarea 
+                    class="query-input" 
+                    id="queryInput" 
+                    placeholder="Ask a question about your document or enter a topic to research..."
+                ></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button class="submit-btn" id="submitBtn">
+                <span class="spinner"></span>
+                <span class="btn-text">⚡ Initialize Agent</span>
+            </button>
+
+            <!-- Result Section -->
+            <section class="result-section" id="resultSection">
+                <div class="result-header">
+                    <span class="result-title">Agent Response</span>
+                    <span class="mode-badge strict" id="modeBadge">Document Source</span>
+                </div>
+                <div class="result-content" id="resultContent">
+                    <!-- Markdown content will be rendered here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Powered by LangChain & FastAPI
+        </footer>
+    </div>
+
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const removeFile = document.getElementById('removeFile');
+        const queryInput = document.getElementById('queryInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+        const modeBadge = document.getElementById('modeBadge');
+
+        let selectedFile = null;
+
+        // File Upload Handlers
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            const validTypes = ['.pdf', '.txt', '.docx'];
+            const ext = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!validTypes.includes(ext)) {
+                alert('Please upload a PDF, TXT, or DOCX file.');
+                return;
+            }
+            
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileInfo.classList.add('show');
+            uploadArea.style.display = 'none';
+        }
+
+        removeFile.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            uploadArea.style.display = 'block';
+        });
+
+        // Submit Handler
+        submitBtn.addEventListener('click', async () => {
+            const query = queryInput.value.trim();
+            
+            if (!query) {
+                alert('Please enter a query.');
+                return;
+            }
+
+            // Upload file if selected
+            if (selectedFile) {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                try {
+                    submitBtn.classList.add('loading');
+                    submitBtn.disabled = true;
+                    
+                    // Upload file
+                    const uploadResponse = await fetch('/upload_document', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        throw new Error('File upload failed');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Failed to upload file. Please try again.');
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                    return;
+                }
+            }
+
+            // Call agent
+            try {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+
+                const response = await fetch('/run_agent_markdown', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        user_id: 'web_user'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Agent request failed');
+                }
+
+                const markdown = await response.text();
+                
+                // Render markdown
+                resultContent.innerHTML = marked.parse(markdown);
+                
+                // Update mode badge (check if response mentions document)
+                const isStrict = markdown.toLowerCase().includes('document') || 
+                                 markdown.toLowerCase().includes('provided');
+                modeBadge.textContent = isStrict ? 'Document Source' : 'AI Generated';
+                modeBadge.className = 'mode-badge ' + (isStrict ? 'strict' : 'hybrid');
+                
+                resultSection.classList.add('show');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Something went wrong. Please try again.');
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Enter key to submit
+        queryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                submitBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
