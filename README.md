@@ -1,223 +1,227 @@
-# 🧠 Nexus AI Agent
+# Nexus AI Agent v2.0
 
-> **Autonomous Multi-Step AI Agent for Research, Summarization & Report Generation**
+**Production-Grade RAG System for Document Q&A**
 
-An intelligent task automation agent built with Python, FastAPI, and OpenAI. It automates research, summarization, and report generation workflows with >85% accuracy using RAG and dynamic context handling.
+## What This Actually Is
 
-🔗 **Live Demo**: [https://nexus-ai-agent.onrender.com](https://nexus-ai-agent.onrender.com)
+A Retrieval-Augmented Generation (RAG) system that:
+- Uploads and processes PDF/DOCX/TXT documents
+- Splits documents into semantic chunks
+- Generates embeddings using Google Gemini
+- Stores embeddings in ChromaDB vector database
+- Retrieves relevant context for user queries
+- Generates answers with source citations
 
----
-
-## ✨ Features
-
-- **📄 Multi-Format Document Support** - Upload PDF, TXT, and DOCX files
-- **🔍 Intelligent Summarization** - Context-aware document analysis
-- **🧠 Hybrid Mode** - Strict document-only mode OR enhanced with LLM knowledge
-- **⚡ Fast Inference** - Optimized for low-memory cloud deployments
-- **🎨 Futuristic UI** - Dark theme with glassmorphism and animated gradients
-- **📊 Structured Reports** - Clean Markdown output with executive summaries
-
----
-
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Frontend (HTML/CSS/JS)                    │
-│              https://nexus-ai-agent.onrender.com                 │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      FastAPI Backend                             │
-│  ┌─────────────┐  ┌──────────────────┐  ┌───────────────────┐  │
-│  │   /upload   │  │ /run_agent_md    │  │     /health       │  │
-│  │  Document   │  │   Agent Query    │  │   Health Check    │  │
-│  └──────┬──────┘  └────────┬─────────┘  └───────────────────┘  │
-└─────────┼──────────────────┼────────────────────────────────────┘
-          │                  │
-          ▼                  ▼
-┌─────────────────┐  ┌───────────────────────────────────────────┐
-│ Document Store  │  │              OpenAI GPT-4o-mini           │
-│ data/documents  │  │     Summarization & Report Generation     │
-└─────────────────┘  └───────────────────────────────────────────┘
+User → FastAPI → Document Parser → Chunker → Embeddings → ChromaDB
+                                                              ↓
+User ← FastAPI ← LLM (Gemini) ← Context Retrieval ← Vector Search
 ```
 
----
-
-## 🔄 Agent Workflow
-
-| Step | Process | Description |
-|------|---------|-------------|
-| 1️⃣ | **Upload** | User uploads PDF, TXT, or DOCX document |
-| 2️⃣ | **Parse** | Document content extracted and stored |
-| 3️⃣ | **Query** | User asks a question about the document |
-| 4️⃣ | **Analyze** | System determines strict vs hybrid mode |
-| 5️⃣ | **Generate** | OpenAI creates structured Markdown report |
-
-### Summarization Modes
-
-| Mode | Condition | Behavior |
-|------|-----------|----------|
-| 🔒 **Strict** | Document ≥ 500 chars | Uses ONLY document content |
-| 🔓 **Hybrid** | Document < 500 chars | Document + LLM knowledge |
-
----
-
-## 📁 Project Structure
+### Project Structure
 
 ```
-nexus-ai-agent/
+nexus/
 ├── app/
-│   └── main.py              # FastAPI application & all routes
-├── static/
-│   ├── index.html           # Frontend UI
-│   └── styles.css           # Futuristic dark theme
+│   ├── __init__.py
+│   ├── main.py                    # FastAPI app
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes.py              # API endpoints
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── document_service.py    # Document parsing
+│   │   ├── embedding_service.py   # Embedding generation (Gemini)
+│   │   ├── vector_service.py      # Vector DB operations (ChromaDB)
+│   │   └── llm_service.py         # LLM calls (Gemini)
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── schemas.py             # Pydantic models
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py              # Settings
+│   │   ├── exceptions.py          # Custom exceptions
+│   │   └── logging.py             # Logging config
+│   └── utils/
+│       ├── __init__.py
+│       └── chunking.py            # Text chunking
+├── tests/
+│   ├── __init__.py
+│   ├── test_chunking.py
+│   ├── test_document_service.py
+│   └── test_api.py
 ├── data/
-│   └── documents/           # Uploaded documents (PDF, TXT, DOCX)
-├── api/
-│   └── index.py             # Vercel serverless handler
-├── Dockerfile               # Container configuration
-├── docker-compose.yml       # Local development stack
-├── requirements.txt         # Python dependencies
-├── .env.example             # Environment template
+│   ├── documents/                 # Uploaded files
+│   └── chroma/                    # Vector DB storage
+├── static/
+│   ├── index.html
+│   └── styles.css
+├── .env.example
+├── .gitignore
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
 └── README.md
 ```
 
----
+## Tech Stack
 
-## 🚀 Quick Start
+- **Backend**: FastAPI, Python 3.11
+- **Embeddings**: Google Gemini text-embedding-004
+- **LLM**: Google Gemini 2.0 Flash
+- **Vector Database**: ChromaDB
+- **Document Processing**: PyPDF2, python-docx
+- **Caching**: Redis (optional)
 
-### Prerequisites
+## Installation
 
-- Python 3.9+
-- OpenAI API Key
-
-### Local Installation
+### Local Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/codezeewrangler/Nexus-AI-Agent.git
-cd Nexus-AI-Agent
+# Clone repository
+git clone https://github.com/yourusername/nexus-ai-agent.git
+cd nexus-ai-agent
 
 # Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Edit .env and add your GEMINI_API_KEY
 
-# Run the server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Run development server
+uvicorn app.main:app --reload
 ```
 
-### Access the Application
-
-- **Frontend UI**: http://localhost:8000
-- **API Docs (Swagger)**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-
----
-
-## 🐳 Docker Deployment
+### Docker Deployment
 
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
+# Set your API key
+export GEMINI_API_KEY=your_key_here
 
-# Or just Docker
-docker build -t nexus-ai-agent .
-docker run -p 8000:8000 -e OPENAI_API_KEY=your_key nexus-ai-agent
+# Run with Docker Compose
+docker-compose up -d
 ```
 
----
+## API Usage
 
-## 📡 API Reference
+### RAG Endpoints (New)
 
-### `POST /upload_document`
-
-Upload a document for analysis.
-
+#### Upload Document with RAG Processing
 ```bash
-curl -X POST https://nexus-ai-agent.onrender.com/upload_document \
+curl -X POST http://localhost:8000/api/upload \
   -F "file=@document.pdf"
 ```
 
-### `POST /run_agent_markdown`
+Response:
+```json
+{
+  "document_id": "uuid-here",
+  "filename": "document.pdf",
+  "size_bytes": 12345,
+  "chunk_count": 42,
+  "upload_time": "2026-01-29T12:00:00Z"
+}
+```
 
-Run the agent and get a Markdown report.
-
+#### Query Documents (RAG)
 ```bash
-curl -X POST https://nexus-ai-agent.onrender.com/run_agent_markdown \
+curl -X POST http://localhost:8000/api/query \
   -H "Content-Type: application/json" \
-  -d '{"query": "Summarize the key points"}'
+  -d '{
+    "query": "What is the refund policy?",
+    "top_k": 5
+  }'
 ```
 
-### `GET /health`
+Response:
+```json
+{
+  "answer": "According to the documents...",
+  "sources": [
+    {
+      "content": "Our refund policy states...",
+      "similarity": 0.92,
+      "chunk_id": "doc123_chunk_5",
+      "page_number": 3
+    }
+  ],
+  "query_time_ms": 1234,
+  "model_used": "gemini-2.0-flash",
+  "tokens_used": 500
+}
+```
 
-Health check endpoint.
+#### Health Check
+```bash
+curl http://localhost:8000/api/health
+```
+
+### Legacy Endpoints (Backward Compatible)
+
+#### Simple Upload (No RAG)
+```bash
+curl -X POST http://localhost:8000/upload_document \
+  -F "file=@document.pdf"
+```
+
+#### Simple Query (No RAG)
+```bash
+curl -X POST http://localhost:8000/run_agent_markdown \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Summarize the documents"}'
+```
+
+## Testing
 
 ```bash
-curl https://nexus-ai-agent.onrender.com/health
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ -v --cov=app
+
+# Run specific test file
+pytest tests/test_chunking.py -v
 ```
 
----
+## Configuration
 
-## ⚙️ Configuration
+All configuration is done via environment variables. See `.env.example` for all options:
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `OPENAI_API_KEY` | OpenAI API key | Yes |
-| `TAVILY_API_KEY` | Tavily search API key | Optional |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GEMINI_API_KEY` | Your Google Gemini API key | Required |
+| `CHROMA_PERSIST_DIRECTORY` | Path to ChromaDB storage | `./data/chroma` |
+| `CHUNK_SIZE` | Characters per chunk | `1000` |
+| `CHUNK_OVERLAP` | Overlap between chunks | `200` |
+| `TOP_K_CHUNKS` | Number of chunks to retrieve | `5` |
+| `LLM_MODEL` | Gemini model to use | `gemini-2.0-flash` |
 
----
+## Known Limitations
 
-## 🛠️ Tech Stack
+- Only supports English text
+- Large documents (>100 pages) may take 30+ seconds to process
+- Requires Google Gemini API key (free tier available)
+- ChromaDB persistence can be slow on some systems
 
-| Component | Technology |
-|-----------|------------|
-| **Backend** | FastAPI, Python 3.11 |
-| **LLM** | OpenAI GPT-4o-mini |
-| **Frontend** | HTML, CSS, JavaScript |
-| **Document Parsing** | PyPDF, python-docx |
-| **Deployment** | Docker, Render |
+## Future Improvements
 
----
+- [ ] Support for more file types (EPUB, Markdown)
+- [ ] Multi-language support
+- [ ] Streaming responses
+- [ ] Better chunking strategies (semantic chunking)
+- [ ] Hybrid search (keyword + vector)
+- [ ] User authentication
+- [ ] Rate limiting
+- [ ] Metrics and monitoring
 
-## 📊 Performance
+## License
 
-| Metric | Value |
-|--------|-------|
-| **Summarization Accuracy** | >85% |
-| **Memory Usage** | ~150MB |
-| **Cold Start** | ~30s (Render free tier) |
-| **Response Time** | 2-5s |
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-## 👤 Author
-
-**Yashovardhan Tiwari**
-
-- GitHub: [@codezeewrangler](https://github.com/codezeewrangler)
-- Built with ❤️ using FastAPI and OpenAI
+MIT License

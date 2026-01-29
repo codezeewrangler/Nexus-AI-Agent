@@ -1,8 +1,26 @@
+# Core Framework
 fastapi
 uvicorn[standard]
-redis
-openai
-pypdf
-python-dotenv
-python-docx
 python-multipart
+
+# AI/ML
+google-generativeai
+chromadb
+
+# Document Processing
+pypdf
+python-docx
+
+# Configuration & Utilities
+python-dotenv
+pydantic-settings
+redis
+
+# Testing
+pytest
+pytest-cov
+httpx
+
+# Optional: Production
+# slowapi  # Rate limiting
+# prometheus-client  # Metrics

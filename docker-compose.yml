@@ -1,24 +1,23 @@
 version: '3.8'
 
 services:
-  app:
+  nexus:
     build: .
-    container_name: nexus-ai-agent
     ports:
       - "8000:8000"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - redis
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CHROMA_PERSIST_DIRECTORY=/app/data/chroma
+      - LLM_MODEL=gemini-2.0-flash
+      - EMBEDDING_MODEL=models/text-embedding-004
     volumes:
       - ./data:/app/data
     restart: unless-stopped
+    depends_on:
+      - redis
 
   redis:
     image: redis:alpine
-    container_name: nexus-redis
     ports:
       - "6379:6379"
     volumes:

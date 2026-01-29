@@ -3,30 +3,31 @@
 import os
 import hashlib
 from dotenv import load_dotenv
-from openai import OpenAI
+import google.generativeai as genai
 from app.agent.redis_client import redis_client
 
 # Load .env from project root
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY")
-print("DEBUG OPENAI_API_KEY:", api_key)  # you should see your key once on startup
+api_key = os.getenv("GEMINI_API_KEY")
+print("DEBUG GEMINI_API_KEY:", "***" + api_key[-4:] if api_key else None)  # Only show last 4 chars for security
 
 if not api_key:
     raise RuntimeError(
-        "OPENAI_API_KEY is not set.\n"
+        "GEMINI_API_KEY is not set.\n"
         "Create a .env file in the project root with:\n"
-        "OPENAI_API_KEY=your_real_key_here"
+        "GEMINI_API_KEY=your_real_key_here"
     )
 
-client = OpenAI(api_key=api_key)
+# Configure Gemini API
+genai.configure(api_key=api_key)
 
 CACHE_TTL = 3600  # 1 hour
 
 
-def ask_llm(prompt: str, model: str = "gpt-4o-mini") -> str:
+def ask_llm(prompt: str, model: str = "gemini-2.0-flash") -> str:
     """
-    Sends a prompt to OpenAI chat model and returns plain text.
+    Sends a prompt to Google Gemini model and returns plain text.
     Uses Redis caching to avoid redundant API calls.
     """
     # Generate cache key from prompt hash
@@ -41,13 +42,10 @@ def ask_llm(prompt: str, model: str = "gpt-4o-mini") -> str:
     except Exception as e:
         print(f"[CACHE ERROR] {e}")
 
-    # Cache miss - call OpenAI
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-    )
-    result = resp.choices[0].message.content
+    # Cache miss - call Gemini
+    gemini_model = genai.GenerativeModel(model)
+    response = gemini_model.generate_content(prompt)
+    result = response.text
 
     # Store in cache
     try:
@@ -57,4 +55,3 @@ def ask_llm(prompt: str, model: str = "gpt-4o-mini") -> str:
         print(f"[CACHE ERROR] {e}")
 
     return result
-
